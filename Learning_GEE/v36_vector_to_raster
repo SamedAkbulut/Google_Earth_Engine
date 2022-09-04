@@ -1,0 +1,18 @@
+
+//PAs of Malaysia
+var fc2 = ee.FeatureCollection('users/minervas_jojo_code/MYS1');
+Map.setCenter(101.68, 3.14, 12); //KL city
+Map.addLayer(fc2, {}, 'Boundaries');
+
+// Make an image out of the numerical gis area attribute and display it.
+var popImage = fc2
+  .filter(ee.Filter.neq('GIS_AREA', null))
+  .reduceToImage({
+    properties: ['GIS_AREA'],
+    reducer: ee.Reducer.first()
+});
+
+//gıs area burada bizim vektör datamızına ttriburtelarından bir tanesi ve ona göre rastera çevirdik
+Map.setCenter(101.68, 3.14, 12);
+//Map.addLayer(popImage, {min: 0, max: 10000, palette: ['0000FF', '00FF00', '00FFFF', 'FF0000']});
+    

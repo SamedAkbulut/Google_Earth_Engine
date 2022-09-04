@@ -1,0 +1,36 @@
+// Load a region representing thailand
+//bunu anlamadım ???
+var region = ee.FeatureCollection('USDOS/LSIB_SIMPLE/2017')
+  .filter(ee.Filter.eq('Country', 'Thailand'));
+
+// Load MODIS land cover categories in 2010
+//https://explorer.earthengine.google.com/#detail/MODIS%2F051%2FMCD12Q1
+var landcover = ee.Image('MODIS/051/MCD12Q1/2010_01_01')
+  // Select the IGBP classification band.
+  .select('Land_Cover_Type_2');
+
+// Load nightlights image inputs.
+var nl2001 = ee.Image('NOAA/DMSP-OLS/NIGHTTIME_LIGHTS/F152001')
+  .select('stable_lights');
+var nl2012 = ee.Image('NOAA/DMSP-OLS/NIGHTTIME_LIGHTS/F182012')
+  .select('stable_lights');
+
+// Compute the nightlights decadal difference, add land cover codes.
+var nlDiff = nl2012.subtract(nl2001).addBands(landcover);
+
+//YUKARIDA : 2001 ve 2012 arası farkı hesapladık ve landcover a ekledik
+
+// Grouped a mean reducer: change of nightlights by land cover category.
+var means = nlDiff.reduceRegion({
+  reducer: ee.Reducer.mean().group({
+    groupField: 1,
+    groupName: 'code',
+  }),
+  geometry: region.geometry(),
+  scale: 1000,
+  maxPixels: 1e8
+});
+
+// Print the resultant Dictionary.
+print(means);
+    

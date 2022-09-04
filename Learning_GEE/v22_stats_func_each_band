@@ -1,0 +1,14 @@
+// Get the median over time, in each band, in each pixel.
+var l8 = ee.ImageCollection('LANDSAT/LC8_L1T_ANNUAL_TOA');
+var median = l8.filterDate('2016-01-01', '2016-12-31').median();
+
+//median yerine istenen başka bir stats da kullanılabilir
+
+// Make a handy variable of visualization parameters.
+var visParams = {bands: ['B4', 'B3', 'B2'], max: 0.3};
+
+// Display the median composite.
+Map.addLayer(median, visParams, 'median');
+print(l8);
+//visual sonuç okey fakat bu verilerin sonuçlarını önceki derste de print edememiştim
+//bir sonuç alıyorum fakat bunu analiz etmekte güçlük çekiyorum

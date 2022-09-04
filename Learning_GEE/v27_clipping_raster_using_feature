@@ -1,0 +1,28 @@
+// Get a feature collection of Japan
+
+
+// bu kodda clip yaptık ve mean e göre çıktı aldık
+
+var japan = ee.FeatureCollection('USDOS/LSIB_SIMPLE/2017').
+              filter(ee.Filter.eq('country_na', 'Japan'));
+
+// Load the NDVI image for 2007.
+//var n2007 = ee.Image('LANDSAT/LT5_L1T_ANNUAL_EVI/2007');
+
+// Load a Landsat 8 based EVI
+var collection = ee.ImageCollection('LANDSAT/LC8_L1T_ANNUAL_EVI') 
+//surface reflectance
+    //.filterBounds(japan)
+    .filterDate('2016-01-01', '2016-04-30');
+
+// Compute average statistics from the image collection 
+var mean = collection.mean();
+
+// Display 
+//Map.addLayer(mean, {}, 'Landsat Satellite (japan)');
+//Map.centerObject(japan, 8);
+
+var roi = mean.clip(japan); //clip will clip raster to the
+// extent of japan 
+
+Map.addLayer(roi);

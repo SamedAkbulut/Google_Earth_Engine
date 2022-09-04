@@ -1,0 +1,35 @@
+// istenen alanlarda belirli featureların zamana göre değişiminin tablosu oluşturuluyor
+
+
+// Define a FeatureCollection: regions of the American West.
+var regions = ee.FeatureCollection([
+  ee.Feature(    // San Francisco.
+    ee.Geometry.Rectangle(-122.45, 37.74, -122.4, 37.8), {label: 'City'}),
+  ee.Feature(  // Tahoe National Forest.
+    ee.Geometry.Rectangle(-121, 39.4, -120.8, 39.8), {label: 'Forest'}),
+  ee.Feature(  // Black Rock Desert.
+    ee.Geometry.Rectangle(-119.15, 40.8, -119, 41), {label: 'Desert'})
+]);
+
+// Load TOA band 4
+var temps2013 = ee.ImageCollection('LANDSAT/LT5_L1T_8DAY_TOA')
+    .filterDate('2009-12-25', '2010-12-25')
+    .select('B4');
+
+// Create a time series chart.
+var tempTimeSeries = ui.Chart.image.seriesByRegion(
+    temps2013, regions, ee.Reducer.mean(), 'B4', 200, 'system:time_start', 'label')
+        .setChartType('ScatterChart')
+        .setOptions({
+          title: 'B4 Variarion',
+          vAxis: {title: 'Band 4'},
+          lineWidth: 1,
+          pointSize: 4,
+          series: {
+            0: {color: 'FF0000'}, // urban
+            1: {color: '00FF00'}, // forest
+            2: {color: '0000FF'}  // desert
+}});
+
+// Display.
+print(tempTimeSeries);

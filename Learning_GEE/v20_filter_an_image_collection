@@ -1,0 +1,19 @@
+// Get a feature collection of Japan
+var japan = ee.FeatureCollection('USDOS/LSIB_SIMPLE/2017')
+  .filter(ee.Filter.eq('country_na', 'Japan'));
+
+// Load a Landsat 8 based EVI
+var collection = ee.ImageCollection('LANDSAT/LC8_L1T_ANNUAL_EVI') 
+//surface reflectance
+    .filterBounds(japan)
+    .filterDate('2016-01-01', '2016-04-30');
+
+// Compute average statistics from the image collection 
+var mean = collection.mean();
+
+// Display 
+Map.addLayer(mean, {}, 'Landsat Satellite (japan)');
+Map.centerObject(japan, 8);
+print(mean);
+// ben burada mean i hesaplattığımda da max hesaplattığımda da yanda aynı ekran geliyor
+//tam olarak anlayamadım, yanlış mı yazıyorum ?

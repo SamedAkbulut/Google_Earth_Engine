@@ -1,0 +1,53 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = 
+    /* color: #d63000 */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      },
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.MultiPolygon(
+        [[[[29.036853078310443, 41.10695435056268],
+           [29.036853078310443, 41.10688967851493],
+           [29.036853078310443, 41.10688967851493],
+           [29.036853078310443, 41.10695435056268]]],
+         [[[29.01196217865224, 41.11258057488601],
+           [29.01196217865224, 41.097188150012734],
+           [29.040028813784076, 41.097188150012734],
+           [29.040028813784076, 41.11258057488601]]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//sadece çok küçük alanlar export edilebilir aksi takdirde error verir
+//kodu run edince task kısmında gelen yer de run edilir resolution vb ayarlar seçilince çıktı alınır
+
+// Load a Landsat TOA image.
+//2010 NDVI
+var n2010a = ee.Image('LANDSAT/LT5_L1T_ANNUAL_NDVI/2010');
+
+var fc = ee.FeatureCollection([ee.Feature(geometry)])
+//var fc = ee.FeatureCollection('ft:1pJ01n-4AWb1oJ4tDUGHarwieSwx7S6Q_DuNdu726');
+// lines: 1gN312M7rNdkKzmBvcy5Vhs9h5gtHP-WBXZAjyaFe
+// 
+
+var roi = n2010a.clip(fc);
+
+// Reduce the region. The region parameter is the Feature geometry.
+var meanDictionary = roi.reduceRegion({
+  reducer: ee.Reducer.mean(),
+  geometry: fc.geometry(),
+  scale: 30,
+  maxPixels: 2142310760
+});
+
+Map.addLayer(roi);
+
+// Export the image, specifying scale and region.
+Export.image.toDrive({
+  image: roi,
+ description: 'ndvi2',
+  scale: 30,
+  region: fc
+ 
+});

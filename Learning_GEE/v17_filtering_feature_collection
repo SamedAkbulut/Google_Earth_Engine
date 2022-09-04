@@ -1,0 +1,19 @@
+var pav = ee.FeatureCollection('users/minervas_jojo_code/PA_VNM');
+
+// access the shapefile: https://code.earthengine.google.com/?asset=users/minervas_jojo_code/PA_VNM
+
+// propertiesden attributelarına bakarak istediğimiz bir tanesi hakkında sınıflandırma yaptık
+
+//Map.centerObject(pav);  
+//Map.addLayer(pav, {color: 'red'}, 'geodesic polygon');
+
+print(pav)
+
+var large = pav.filter(ee.Filter.gt('GIS_AREA', 350)); //gt greater than
+
+// Check the number of pas after filtering for size and location.
+print('Count after filtering by size:', large.size());
+
+var filter = ee.Filter.inList('IUCN_CAT', ['IV']);
+var filteredArea = pav.filter(filter);
+Map.addLayer(filteredArea, {color: 'blue'}, 'filteredArea');

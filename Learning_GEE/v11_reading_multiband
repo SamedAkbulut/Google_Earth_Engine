@@ -1,0 +1,18 @@
+// Load an image.
+var image = ee.Image('LANDSAT/LC08/C01/T1_TOA/LC08_044034_20140318');
+//pre-corrected Landsat data
+
+// Define the visualization parameters.
+//https://landsat.usgs.gov/what-are-band-designations-landsat-satellites
+var vizParams = {
+  bands: ['B5', 'B4', 'B6'],
+  min: 0,
+  max: 0.5,
+  gamma: [0.95, 1.1, 1]
+};
+
+// Center the map and display the image.
+Map.setCenter(-122.1899, 37.5010, 10); // San Francisco Bay
+Map.addLayer(image, vizParams, 'false color composite');
+// 5-4-3 yapınca deeper red means the concentration of vegetation
+//swır bandları jeolojik obleleri ve soil based objeleri tespitte iyidir

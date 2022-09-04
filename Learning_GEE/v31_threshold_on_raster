@@ -1,0 +1,21 @@
+//load a china boundary from a fusion tabl
+var china = ee.FeatureCollection('ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw')
+  . filter(ee.Filter.eq('Country','China'));
+  
+  
+//üstte yazdığımız kırmızı yer neyi temsil ediyor ? YAZDIĞIMDA BİR ŞEY GELMEDİ ? :(
+  
+//load forest cover, clipped to the china border
+//istediğim görüntüyü ve istediğim özelliğini getirdim
+var fc= ee.ImageCollection("MODIS/006/MOD44B")
+  .select('Percent_Tree_Cover').median()
+  .clipToCollection(china);
+
+
+Map.addLayer(fc);
+
+//yukarıda, çalıştırılınca açık renk gelen yerler ormanların yoğunlukta olduğu yerlerdir
+//AŞAĞIDA İSTEDİĞİMİZ 3 ARALIKTA GÖRÜNTÜYÜ SINIFLAMIŞ OLDUK
+//define arbitrary thresholds on the 6 bit nightlights image
+//var zones = fc.gt(30).add(fc.gt(60)).add(fc.gte(75));
+//zones = zones.updateMask(zones.neq(0));

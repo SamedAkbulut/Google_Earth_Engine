@@ -1,0 +1,32 @@
+// Image reduction
+//
+// Computes a simple reduction over a region of an image.  A reduction
+// is any process that takes an arbitrary number of inputs (such as
+// all the pixels of an image in a given region) and computes one or
+// more fixed outputs.  The result is a dictionary that contains the
+// computed values, which in this example is the maximum pixel value
+// in the region.
+
+
+
+// The input image to reduce, in this case an SRTM elevation map.
+var image = ee.Image('CGIAR/SRTM90_V4');
+
+// The region to reduce within.
+var jp = ee.FeatureCollection('USDOS/LSIB_SIMPLE/2017').
+              filter(ee.Filter.eq('country_na', 'Japan'));
+
+// Reduce the image within the given region, using a reducer that
+// computes the max pixel value.  We also specify the spatial
+// resolution at which to perform the computation, in this case 1000
+// meters.
+var max = image.reduceRegion({
+  reducer: ee.Reducer.max(),
+  geometry: jp,
+  scale: 1000,
+  maxPixels: 1e9
+});
+
+// Print the result (a Dictionary) to the console.
+print(max);
+

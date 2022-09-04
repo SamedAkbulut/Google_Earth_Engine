@@ -1,0 +1,24 @@
+//funtion ve return ile aslında tanımlama yapıyoruz
+//parantez içindeki 0 ne işe yarıyor
+
+function getNDVI (image){
+  return image.normalizedDifference(['B3','B4'])
+              .select([0],['ndvi']) //Give name to the band and return its value
+}
+// ndvi= (b3-b4)/(b3+b4)
+var year = 2008;
+//landsat 5 data
+var collection = ee.ImageCollection("LANDSAT/LT05/C01/T1")
+  .filterDate(new Date(year,1,1),new Date(year+1,1,1))
+print(collection)
+
+//yukarıa year 2008 1,1 1 ocak year +! ise 2009 demektir
+
+collection = collection.map(getNDVI);
+//print(collection)
+var maxNDVI = collection.max()
+//print(maxNDVI)
+Map.addLayer(maxNDVI)
+
+//yukarıda ister mean ister max vb. istediğimizi çalıştırabiliriz
+//error verme sebebi huge dataset olması,zoom yapan yerde kod çalışıyor

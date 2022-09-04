@@ -1,0 +1,31 @@
+// istenen bölge için yangın istatistiğinin plotunu çıkarttık
+
+var amzn = ee.FeatureCollection('users/minervas_jojo_code/Amazonia_bolivia');
+//https://code.earthengine.google.com/?asset=users/minervas_jojo_code/Amazonia_bolivia
+
+amzn = amzn.geometry();// variable which has the shapefile
+
+Map.centerObject(amzn);  
+Map.addLayer(amzn, {color: 'red'}, 'geodesic polygon');
+
+//fire 
+var dataset = ee.ImageCollection('FIRMS').select('confidence')
+
+var years = ee.List.sequence(2003,2016) // list of yrs from 2003-2016
+ 
+var maps = ee.ImageCollection(years.map(function(year){
+var startDate = ee.Date.fromYMD(year,1,1) //1 ocak
+var endDate = ee.Date.fromYMD(year,12,31) //31 aralık
+var myImg = dataset.filter(ee.Filter.date(startDate,endDate)).max().gt(100).set("system:time_start",startDate)
+return myImg
+}))
+
+
+print(ui.Chart.image.seriesByRegion({imageCollection:maps,
+regions:amzn,
+reducer:ee.Reducer.count(),//count 
+scale:1000}).setOptions({title: 'Fire count', //plot adı
+lineWidth: 1,
+pointSize: 3}));
+ 
+Map.addLayer(maps.max().clip(amzn), {min:0,max:1,palette:['red']}, 'Fires');

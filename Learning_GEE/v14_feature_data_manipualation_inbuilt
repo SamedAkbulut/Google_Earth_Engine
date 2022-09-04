@@ -1,0 +1,30 @@
+//https://developers.google.com/earth-engine/vector_datasets
+
+//explorerdan bulduğumuz ve istediğimiz datayı uzantısı sayesinde yüklüyoruz
+// Load country features from Large Scale International Boundary (LSIB) dataset.
+var countries = ee.FeatureCollection('USDOS/LSIB_SIMPLE/2017');
+
+//kolombiyayı subset ettik
+// Subset the colombia feature from countries.
+var p = countries.filter(ee.Filter.eq('country_na', 'Colombia'));
+
+print (p)
+
+Map.centerObject(p);  
+Map.addLayer(p, {color: 'blue'}, 'geodesic polygon');
+
+///////////// 
+
+//aşağıda yer alan kırmızı yazıyı vector datasets kısmından poligon uzantısı için alıyoruz fakat site açılmıyor
+
+var protectedAreas2 = ee.FeatureCollection('WCMC/WDPA/current/polygons')
+  .filter(ee.Filter.and(
+    ee.Filter.bounds(p.geometry()),
+    ee.Filter.neq('IUCN_CAT', 'II'),
+    //ee.Filter.neq('STATUS', 'proposed'),
+    ee.Filter.lt('STATUS_YR', 2010)
+  ))
+//isyediğimiz özellikleri üstte filtrelemiş olduk  
+  
+Map.centerObject(protectedAreas2);  
+Map.addLayer(protectedAreas2, {color: 'red'}, 'geodesic polygon');

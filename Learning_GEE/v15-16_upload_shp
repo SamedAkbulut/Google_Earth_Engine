@@ -1,0 +1,4 @@
+var table = ee.FeatureCollection("users/samed/train_new_2007");
+//Visualize the data
+Map.setCenter(105.624892, 21.477768, 11);
+Map.addLayer(table,undefined,"Training Samples");

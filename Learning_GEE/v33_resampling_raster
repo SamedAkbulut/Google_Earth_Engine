@@ -1,0 +1,15 @@
+//Earth Engine performs nearest neighbor resampling by default 
+//during reprojection
+var image = ee.Image("CGIAR/SRTM90_V4"); //dem
+
+//Map.centerObject(image, 9); //zoom 9
+
+Map.setCenter(116.84,4.85,9); //latitude, longitude, zoom level
+
+//Map.addLayer(image, {min: 0, max: 3000},"custom visualization"); //display
+
+// Force the next reprojection on this image to use bicubic resampling.
+var resampled = image.resample('bicubic');
+//isteen resampling tekniği kullanılabilir
+
+Map.addLayer(image, {min: 0, max: 3000},"resampled");

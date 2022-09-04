@@ -1,0 +1,10 @@
+var image = ee.Image("CGIAR/SRTM90_V4");
+
+//Map.centerObject(image, 9); //zoom 9
+
+Map.setCenter(116.84,4.85,9); //latitude, longitude, zoom level
+
+//Map.addLayer(image, {min: 0, max: 3000},"custom visualization"); //display
+
+Map.addLayer(image,{min: 0, max: 3000, palette: ['blue','green','red']},'custom palette'); 
+// Let us focus on a point

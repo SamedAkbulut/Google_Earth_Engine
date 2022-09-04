@@ -1,0 +1,22 @@
+var collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_TOA')
+    .filter(ee.Filter.eq('WRS_PATH', 130))
+    .filter(ee.Filter.eq('WRS_ROW', 43))
+    .filterDate('2014-01-01', '2015-01-01');
+print('Collection: ', collection);
+
+// Convert the collection to a list and get the number of images.
+var size = collection.toList(100).length();
+print('Number of images: ',size);
+
+// Get the number of images.
+var count = collection.size();
+print('Count: ',count);
+
+// Get the date range of images in the collection
+var dates = ee.List(collection.get('date_range'));
+var dateRange = ee.DateRange(dates.get(0),dates.get(1));
+print(dateRange);
+
+// Sort by a cloud cover property, get the least cloudy image
+var image = ee.Image(collection.sort('CLOUD_COVER').first());
+print('Least cloudy image: ', image);

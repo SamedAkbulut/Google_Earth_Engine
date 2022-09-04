@@ -1,0 +1,42 @@
+// Load a Japan boundary from the Large Scale International Boundary dataset.
+var japan = ee.FeatureCollection('USDOS/LSIB_SIMPLE/2017')
+  .filter(ee.Filter.eq('country_na', 'Japan'));
+
+// Load forest cover, clipped to the China border.
+var fc = ee.ImageCollection('MODIS/006/MOD44B')
+  .select('Percent_Tree_Cover').median()
+  .clipToCollection(japan);
+
+//Map.addLayer(fc);
+
+// Define arbitrary thresholds on the 
+var zones = fc.gt(30).add(fc.gt(60)).add(fc.gte(75));
+zones = zones.updateMask(zones.neq(0));
+
+// Convert the zones of the thresholded zones to vectors.
+var vectors = zones.addBands(fc).reduceToVectors({
+  geometry: japan,
+  crs: fc.projection(),
+  scale: 1000,
+  geometryType: 'polygon',
+  eightConnected: false,
+  labelProperty: 'zone',
+  reducer: ee.Reducer.mean()
+});
+
+// Display the thresholds.
+Map.setCenter(139.6225, 35.712, 9);
+Map.addLayer(zones, {min: 1, max: 3, palette: ['0000FF', '00FF00', 'FF0000']}, 'raster');
+
+// Make a display image for the vectors, add it to the map.
+var display = ee.Image(0).updateMask(0).paint(vectors, '000000', 3);
+Map.addLayer(display, {palette: '000000'}, 'vectors');
+    
+
+// Display the thresholds.
+Map.setCenter(101.35, 24.4, 9);
+Map.addLayer(zones, {min: 1, max: 3, palette: ['0000FF', '00FF00', 'FF0000']}, 'raster');
+
+// Make a display image for the vectors, add it to the map.
+var display = ee.Image(0).updateMask(0).paint(vectors, '000000', 3);
+Map.addLayer(display, {palette: '000000'}, 'vectors');

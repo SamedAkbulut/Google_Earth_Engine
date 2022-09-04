@@ -1,0 +1,35 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #ff0000 */ee.Geometry.Polygon(
+        [[[28.84412855030382, 41.201925185604026],
+          [28.719159067881947, 40.95451168506863],
+          [28.947125376475697, 40.93687776620147],
+          [29.015789927256947, 41.14920800555468]]]),
+    geometry2 = /* color: #00ff00 */ee.Geometry.Polygon(
+        [[[29.01716321827257, 41.080922803633214],
+          [28.98420423389757, 40.95036295131696],
+          [29.136639536631947, 40.89225330788383],
+          [29.191571177256947, 41.02914430702725]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var image = ee.Image().byte()
+    .paint(geometry, 0)
+    .paint(geometry, 1, 5)
+    .paint(geometry2, 2)
+    .paint(geometry2, 3, 5)
+Map.addLayer(image, {min:0, max:4, palette: ["red", "yellow", "blue", "green"]})
+
+var c = ee.FeatureCollection([ee.Feature(geometry)])
+var c2 = ee.FeatureCollection([ee.Feature(geometry2)])
+//feature collection haline getirdik
+
+
+//aşağıda bir dem yüklüyoruz
+var img = ee.Image("srtm90_v4")
+    .visualize({min:0, max:3000, palette:["green", "yellow"]})
+var d1 = c.draw("red") //stylized colour
+var d2 = c2.draw("blue")
+
+//yükseklik arttıkça sarılaşacak
+
+var result = ee.ImageCollection([img, d1,d2]).mosaic()
+Map.setCenter(28.9,41,13); //latitude, longitude, zoom level
+Map.addLayer(result)

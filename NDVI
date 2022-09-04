@@ -1,0 +1,33 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var ROI = ee.FeatureCollection("users/samed/Polygon_ZONE16_UPDATE_v02"),
+    geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[40.67855343871084, 38.182771188733355],
+          [40.67855343871084, 37.63886735889956],
+          [41.55471310667959, 37.63886735889956],
+          [41.55471310667959, 38.182771188733355]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var L8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+.filterBounds(geometry)
+.filterDate("2020-10-10", "2021-03-03")
+.filterMetadata('CLOUD_COVER', 'less_than',50)
+.mean()
+.clip(geometry);
+
+var nir = L8.select('B5');
+var red = L8.select('B4');
+var ndvi = nir.subtract(red).divide(nir.add(red)).rename('NDVI');
+var ndviParams = {min: -1, max: 1, palette: ['blue','white','green']};
+print(L8)
+print(ndvi)
+print(nir)
+print(red)
+Map.addLayer(ndvi,ndviParams,'NDVI image');
+Map.addLayer(ROI,undefined,"Training Samples");

@@ -1,0 +1,17 @@
+// Get the data from a certain area
+// Part of thailand; path=130 & row=50
+
+//kırmızı yerde açmak istediğim uydu görüntüsünün adı/kodu var
+var l8 = ee.ImageCollection('LANDSAT/LC8_L1T_TOA');
+var thai = l8.filterDate('2016-01-01', '2016-12-31')
+              .filter(ee.Filter.eq('WRS_PATH', 130))
+              .filter(ee.Filter.eq('WRS_ROW', 50));
+              
+//select image with lease cloud cover
+var thai_cloud = ee.Image(thai.sort('CLOUD_COVER').first());              
+
+// Make a handy variable of visualization parameters.
+var visParams = {bands: ['B4', 'B3', 'B2'], max: 0.3};
+
+// Display the median composite.
+Map.addLayer(thai_cloud, visParams, 'median');

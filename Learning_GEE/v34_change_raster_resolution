@@ -1,0 +1,37 @@
+// Load a 500m MODIS EVI image.
+var modis = ee.Image(ee.ImageCollection('MODIS/006/MOD13A1').first())
+    .select('NDVI');
+    
+// Display the NDVI image in Sabah.
+Map.setCenter(116.84,4.85,9);
+Map.addLayer(modis, {min: 2000, max: 5000}, 'MODIS ndvi');    
+
+// Get information about the MODIS projection.
+var modisProjection = modis.projection();
+print('MODIS projection:', modisProjection);
+
+// Load and display forest cover data at 30 meters resolution.
+//treecover2000 o görüntünün kendi kodlarından biri
+var forest = ee.Image('UMD/hansen/global_forest_change_2015')
+    .select('treecover2000');
+Map.addLayer(forest, {max: 85}, 'forest cover 30 m');
+
+//2000 yılında tree coverı en fazla 80 olan yerleri gösterecek
+
+// Get the forest cover data at MODIS scale and projection.
+var forestMean = forest
+    // Force the next reprojection to aggregate instead of resampling.
+    .reduceResolution({
+      reducer: ee.Reducer.mean(),
+      maxPixels: 1024
+    })
+    // Request the data at the scale and projection of the MODIS image.
+    .reproject({
+      crs: modisProjection
+    });
+
+// Display the aggregated, reprojected forest cover data.
+Map.addLayer(forestMean, {max: 80}, 'forest cover at MODIS scale');
+
+
+//30 metrelik forestcover datamızı modise göre reporoject ettik

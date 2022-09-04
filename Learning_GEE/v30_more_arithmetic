@@ -1,0 +1,25 @@
+//burada sıcaklık verisi içeren bir multiband raster data kullanacağız
+//elimizde olan kelvinin celcius yapıyoruz
+
+var modisCollection = ee.ImageCollection('MODIS/MOD11A2')
+                    .filterDate(new Date(2000,1,1),new Date(2001,1,1));
+                    
+                    
+//Map.addLayer(modisCollection,{});                    
+
+//Convert to celsius:  T(°C) = T(K) - 273.15
+
+
+//aşağıda istediğimiz bandı filtreleyip seçiyoruz
+//kırmızı yazılı olan kodu explorer da görüntünün açıklamasından buluyoruz
+//hesaplamakolay oldsun diye float yaptık
+//çarptığımız 0.02 değeri görüntünün açıklamasında var, day 1km için o sayı ile çarpmak gerek
+//sonrasında celcius yapmak için 273 .15 çıkardık
+
+var modLST = modisCollection.select(['LST_Day_1km'])
+              .median()
+              .toFloat()
+              .multiply(ee.Image(0.02))
+              .subtract(ee.Image(273.15))
+              
+Map.addLayer(modLST,{});               

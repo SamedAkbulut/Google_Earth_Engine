@@ -1,0 +1,18 @@
+var image = ee.Image('LANDSAT/LC08/C01/T1/LC08_129050_20171125').select('B8');
+//yukarıda istenen yere dair path raw ve tarih bilhggileri verilmiş
+//select the 15m panchromatic band
+//bangkok city
+//canny edge detector direkt olarak docsta bulunan bir algorştmadır
+//edgeleri detect etmek için kullanılır
+
+Map.addLayer(image, {}, 'scene');
+
+// Perform Canny edge detection and display the result.
+//Canny edge detector is an edge detection operator that uses a 
+//multi-stage algorithm to detect a wide range of edges in images
+var canny = ee.Algorithms.CannyEdgeDetector({
+  image: image, threshold: 10, sigma: 1
+});
+Map.setCenter(100.50, 13.75, 10);//bangkok city coordinates
+Map.addLayer(canny, {}, 'canny');
+    

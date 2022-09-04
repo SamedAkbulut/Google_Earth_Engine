@@ -1,0 +1,19 @@
+
+// Print a string- Hello world
+print('Hello World!');
+
+var exampleString = "Hello UK" //"string"
+print(exampleString);
+
+var sum = 7+9
+print(sum);
+
+// make a list []
+
+var l =[7,"8","sum"];
+print(l);
+
+// Use curly brackets {} to make a dictionary of key:value pairs.
+
+var o= {a:"cat",b:"rat",c:3};
+print(o);

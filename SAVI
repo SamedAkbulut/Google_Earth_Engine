@@ -1,0 +1,42 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var ROI = ee.FeatureCollection("users/samed/Polygon_ZONE16_UPDATE_v02"),
+    geometry = 
+    /* color: #98ff00 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[40.72502949812943, 38.08380059048747],
+          [40.72502949812943, 37.64145263234487],
+          [41.55449727156693, 37.64145263234487],
+          [41.55449727156693, 38.08380059048747]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var L8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+.filterBounds(geometry)
+.filterDate("2020-10-10", "2021-03-03")
+.filterMetadata('CLOUD_COVER', 'less_than',50)
+.mean()
+.clip(geometry);
+
+var nir = L8.select('B5');
+var red = L8.select('B4');
+
+
+
+var savi = (nir.subtract(red).multiply(1.5)).divide(nir.add(red).add(0.5));
+var saviParams = {min: -1, max: 1, palette: ['blue','white','black']};
+//var ndvi = nir.subtract(red).divide(nir.add(red)).rename('ndvi');
+//var ndviParams = {min: -1, max: 1, palette: ['blue','white','black']};
+
+
+print(L8)
+print(savi)
+//print(ndvi)
+print(nir)
+print(red)
+Map.addLayer(savi,saviParams,'savi image');
+Map.addLayer(ROI,undefined,"Training Samples");
+//Map.addLayer(ndvi,ndviParams,'ndvi image');

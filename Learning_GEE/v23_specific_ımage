@@ -1,0 +1,24 @@
+//LC08_130043_20171116
+
+
+//altta verilen 2 satır (6. 7. satırlar), kodu verilen görüntüyü istenen kombinasyonda getirir
+//044034 location, yanındaki ise tarih
+//var image = ee.Image('LANDSAT/LC08/C01/T1/LC08_044034_20140318');
+//Map.addLayer(image,{bands:['B4','B3','B2'], min:6000, max: 12000}, 'scene');
+
+
+//aşağıda ki 2 satır istenen spesifik bandı (b7) istenen yer ve tarihte getirdi
+//var scene = ee.Image('LANDSAT/LC08/C01/T1/LC08_044034_20140318').select('B7');
+//Map.addLayer(scene, {max:12000});
+
+//usgs den istediğim bir veriyi buldum ve şimdi onu burada açacağım
+//tüm id yi yazmamıza gerek yok
+//önce sensörü tanımlarız (lc08) yani landsat 8
+// sonrasında path + 0 + row şeklinde bilgiler girilir
+//year month date olarak tarih girilir
+
+var image = ee.Image('LANDSAT/LC08/C01/T1/LC08_130043_20171116');
+Map.addLayer(image,{bands:['B4','B3','B2'], min:6000, max: 12000}, 'scene');
+
+//https://landsat.usgs.gov/pathrow-shapefiles
+//üstte verilen siteden istenilen yerlere ait kml ler indirilip sonra earth prodana çılıp path row u öğrenilebiir
