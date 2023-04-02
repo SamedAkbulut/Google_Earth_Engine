@@ -1,0 +1,64 @@
+// AUTOMATICALLY GENERATED: imported vars from saved link.
+var CONVERT_TO_IMPORT = (
+[{"type":"imageCollection","name":"Sentinel_2","record":{"id":"COPERNICUS/S2_SR_HARMONIZED"}},{"type":"table","name":"table","record":{"id":"users/samed/623521_doktar_problemli_alan"}}])
+
+// AUTOMATICALLY GENERATED: location from saved link.
+Map.setCenter(264.8, 34.8, 4)
+
+var rgbvis = {
+    min:0,
+    max:3000,
+    bands:["B4","B3","B2"],
+  }
+var roi = ee.FeatureCollection(table).geometry();
+var sentinel_mardin = Sentinel_2.filter(ee.Filter.bounds(roi))
+    .filter(ee.Filter.date('2023-1-01', '2023-3-01'))
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 30));
+    
+var sentinel_mardin_median = sentinel_mardin.median()
+var clip_image = sentinel_mardin_median.clip(roi);
+
+
+var ndvi = clip_image.normalizedDifference(['B8', 'B4']);
+var ndviParams = {min: -1, max: 1, palette: ['red', 'yellow', 'green']};
+
+var clipped_ndvi = ndvi.clip(table);
+
+var ndviImages = sentinel_mardin.map(function(image) {
+  return image.normalizedDifference(['B8', 'B4']).clip(roi);
+});
+
+var ndviImageList = ndviImages.toList(ndviImages.size());
+var ndviDiffImages = [];
+for (var i = 0; i < ndviImages.size().subtract(1).getInfo(); i++) {
+  var current = ee.Image(ndviImageList.get(i));
+  var next = ee.Image(ndviImageList.get(i + 1));
+  var ndviDiff = next.subtract(current).rename(['ndvi_diff']);
+  ndviDiffImages.push(ndviDiff);
+}
+
+for (var i = 0; i < ndviDiffImages.length; i++) {
+  Export.image.toDrive({
+    image: ndviDiffImages[i],
+    description: 'ndvi_diff_' + i,
+    folder:'gee623521',
+    scale: 10,
+    region: roi
+  });
+}
+
+//date eklenmiş hali
+var dates = sentinel_mardin.aggregate_array('system:time_start').getInfo();
+
+for (var i = 0; i < ndviDiffImages.length; i++) {
+  var date = new Date(dates[i]);
+  var dateString = date.toLocaleDateString();
+  
+  Export.image.toDrive({
+    image: ndviDiffImages[i],
+    description: 'ndvi_diff_' + dateString,
+    folder:'gee623521',
+    scale: 10,
+    region: roi
+  });
+}
