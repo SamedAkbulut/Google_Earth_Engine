@@ -1,0 +1,133 @@
+// AUTOMATICALLY GENERATED: imported vars from saved link.
+var CONVERT_TO_IMPORT = (
+[{"type":"imageCollection","name":"L8","record":{"id":"LANDSAT/LC08/C02/T1_L2"}},{"type":"geometry","name":"geometry","record":{"geometries":[{"type":"Point","coordinates":[-98.9353515625,31.52676121060986]}],"displayProperties":[],"properties":{},"color":"#d63000","mode":"Geometry","shown":false,"locked":false}},{"type":"table","name":"table7","record":{"id":"users/Aybikeaydin2000/8_28_15_finalvers"}},{"type":"table","name":"table2","record":{"id":"users/Aybikeaydin2000/metadataTxSON"}},{"type":"table","name":"table9","record":{"id":"users/samed/finalvers4"}},{"type":"table","name":"table","record":{"id":"users/samed/finalvers3"}}])
+
+// AUTOMATICALLY GENERATED: location from saved link.
+Map.setCenter(261.21988, 30.31394453411586, 9)
+
+var img = L8.filterBounds(geometry)
+//print(img)
+table = table.map(function(f){return f.setGeometry(ee.Geometry.Point([f.get("LON"),f.get("LAT")]))})
+var minMax = table.reduceColumns(ee.Reducer.minMax(),["SWC_5"])
+print(minMax)
+table = table.map(function(f){return f.set("SWC_5",f.getNumber("SWC_5").subtract(minMax.get("min")).divide(minMax.getNumber("max").subtract(minMax.get("min"))))})
+img = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_028039_20150828')
+img = img.addBands(img.select("SR.*").multiply(0.0000275).add(-0.2),null,true).addBands(img.select("ST.*").multiply(0.00341802).add(149),null,true)
+img = img.select(["SR_B2","SR_B3","SR_B4","SR_B5","SR_B6","ST_B10"],["BLUE","GREEN","RED","SWIR","NIR", "TEMP"])
+img = img.addBands(img.select("TEMP").divide(400),null,true)
+Map.addLayer(img, {min:0, max:0.3, bands:["RED","GREEN","BLUE"]})
+Map.centerObject(table)
+//print(img)
+
+Map.addLayer(img, {min:0, max:0.3, bands:["TEMP"]}, "Temp")
+
+//Map.addLayer(img, {min:0,max:0.3,bands:["RED","GREEN","BLUE"]}, "True Color")
+print("sample", table)
+Map.addLayer(table, {color:"red"}, "Sample Points")
+
+table = table.randomColumn("random")
+var val = table.filter("random >= 0.8")
+var train = table.filter("random < 0.8")
+
+print("val", val)
+print("train", train)
+
+var trainSamples = img.sampleRegions(train, ["SWC_5"], 30)
+var valSamples = img.sampleRegions(val, ["SWC_5"], 30)
+
+print("trainSamples:", trainSamples)
+print("valSamples:", valSamples)
+
+
+function chart(samples){return ui.Chart.feature.byFeature(samples, "SWC_5", ["SWC_5_pred"]).setChartType("ScatterChart").setOptions({trendlines: {0: {visibleInLegend: true, showR2: true}}})}
+
+//Linear Regression
+// print("Linear Regression", chart(trainSamples))
+
+print("trainSamples:", trainSamples)
+
+var linearRegression = trainSamples.reduceColumns(ee.Reducer.linearFit(),["TEMP","SWC_5"])
+var valSWCfromLR = valSamples.map(function(f){return f.set("SWC_5_pred",f.getNumber("TEMP").multiply(linearRegression.getNumber("scale")).add(linearRegression.getNumber("offset")))})
+print("valSWCfromLR", chart(valSWCfromLR))
+print("valSWCfromLR R²",valSWCfromLR.reduceColumns(ee.Reducer.pearsonsCorrelation(), ["SWC_5", "SWC_5_pred"]).getNumber("correlation").pow(2))
+var SWCfromLR = img.select("TEMP").multiply(linearRegression.getNumber("scale")).add(linearRegression.getNumber("offset"))
+Map.addLayer(SWCfromLR, {min:0,max:1,palette:["BLUE","GREEN","RED"]}, "Linear Regression SWC")
+
+//Multi Linear Regression
+var NDMI = function(img){return img.normalizedDifference(["NIR", "SWIR"]).rename("NDMI")}
+var SI = function(img){return img.expression("(i.BLUE*i.RED)/i.GREEN", {"i":img}).rename("SI")}
+
+// 1 = multilinear
+img = img.addBands(ee.Image(1)).addBands(NDMI(img)).addBands(SI(img))
+//img = img.addBands(NDMI(img)).addBands(SI(img))
+
+trainSamples = img.sampleRegions(train, ["SWC_5"], 30)
+valSamples = img.sampleRegions(val, ["SWC_5"], 30)
+var multiLinearRegression = trainSamples.reduceColumns(ee.Reducer.linearRegression({numX:7,numY:1}),["constant","BLUE","GREEN","RED","NIR","NDMI","SI","SWC_5"])
+var coef = multiLinearRegression.getArray("coefficients")
+var valSWCfromML = valSamples.map(function(f){return f.set("SWC_5_pred",f.toArray(["constant","BLUE","GREEN","RED","NIR","NDMI","SI"]).dotProduct(coef.project([0])))})
+print("valSWCfromML", chart(valSWCfromML))
+print("valSWCfromML R²",valSWCfromML.reduceColumns(ee.Reducer.pearsonsCorrelation(), ["SWC_5", "SWC_5_pred"]).getNumber("correlation").pow(2))
+var SWCfromML = img.select(["constant","BLUE","GREEN","RED","NIR","NDMI","SI"]).toArray().arrayDotProduct(coef.project([0])).rename("SWC")
+Map.addLayer(SWCfromML, {min:0,max:1,palette:["BLUE","GREEN","RED"]}, "Multi-Linear Regression SWC")
+
+//Random Forest Regression
+var rf = ee.Classifier.smileRandomForest(100).setOutputMode("REGRESSION")
+var rftrained = rf.train(trainSamples, "SWC_5")
+var valSWCfromRF = valSamples.classify(rftrained, "SWC_5_pred")
+print("valSWCfromRF", chart(valSWCfromRF))
+print("valSWCfromRF R²",valSWCfromRF.reduceColumns(ee.Reducer.pearsonsCorrelation(), ["SWC_5", "SWC_5_pred"]).getNumber("correlation").pow(2))
+var SWCfromRF = img.classify(rftrained, "SWC_5_pred")
+Map.addLayer(SWCfromRF, {min:0,max:1,palette:["BLUE","GREEN","RED"]}, "Random Forest Regression SWC")
+
+//Support Vector Machine Regression
+function doKFold(samples, classifier, k){
+  samples = samples.randomColumn("rand")
+  var folds = ee.List.sequence(0,100,100/k)
+  var foldsList = samples.reduceColumns(ee.Reducer.percentile(folds), ["rand"])
+  var percentiles = foldsList.values(folds.map(function(p){return ee.String("p").cat(ee.Number(p).int())}))
+  percentiles = percentiles.set(0,0).set(-1,1)
+  return ee.ImageCollection(ee.List.sequence(0, k-1).map(function(r){
+    var train = samples.filter(ee.Filter.or(ee.Filter.lt("rand", percentiles.get(r)), ee.Filter.gte("rand", percentiles.get(ee.Number(r).add(1)))));
+    var validation = samples.filter(ee.Filter.inList("No",train.aggregate_array("No")).not());
+    var trained = classifier.train(train, "SWC_5", img.bandNames());
+    var valClassified = validation.classify(trained, "SWC_5_pred")
+    var validation_r2 = ee.Number(valClassified.reduceColumns(ee.Reducer.pearsonsCorrelation(), ["SWC_5","SWC_5_pred"]).get("correlation")).pow(2);
+    var validation_rmse = ee.Array(valClassified.aggregate_array("SWC_5")).subtract(valClassified.aggregate_array("SWC_5_pred")).pow(2).reduce("mean", [0]).get([0]).sqrt()
+    return img.classify(trained, "SWC_5_pred").set({validation_r2:validation_r2, validation_rmse:validation_rmse});
+  }));
+}
+
+function gridSearch(samples, gammaValues, costValues){
+  return gammaValues.map(function(gamma){
+    return costValues.map(function(cost){
+      var classifier = ee.Classifier.libsvm({svmType:"EPSILON_SVR",kernelType:"RBF",gamma:gamma,cost:cost}).setOutputMode("REGRESSION")
+      return {gamma:gamma,cost:cost,acc:doKFold(samples, classifier, 5).aggregate_mean("validation_r2")}
+    })
+  })
+}
+
+var testGammaValues = ee.List.sequence(-5,10).map(function(i){return ee.Number(2).pow(i)})
+var testCostValues = ee.List.sequence(-1,10).map(function(i){return ee.Number(2).pow(i)})
+var gridSearchResults = gridSearch(trainSamples, testGammaValues, testCostValues)
+print("gridSearch", gridSearchResults)
+var best = ee.FeatureCollection(gridSearchResults.flatten().map(function(f){return ee.Feature(null, f)})).sort("acc", false).first()
+var svm = ee.Classifier.libsvm({svmType:"EPSILON_SVR",kernelType:"RBF",gamma:best.get("gamma"),cost:best.get("cost")}).setOutputMode("REGRESSION")
+var svmtrained = svm.train(trainSamples, "SWC_5")
+var valSWCfromSVM = valSamples.classify(svmtrained, "SWC_5_pred")
+print("valSWCfromSVM", chart(valSWCfromSVM),valSWCfromSVM)
+print("valSWCfromSVM R²",valSWCfromSVM.reduceColumns(ee.Reducer.pearsonsCorrelation(), ["SWC_5", "SWC_5_pred"]).getNumber("correlation").pow(2))
+
+
+// K-Fold for SVM
+var kfoldResult = doKFold(trainSamples, svm, 5)
+var SWCfromSVM = kfoldResult.mean()
+print("valSWCfromSVM kFold R²",kfoldResult.aggregate_mean("validation_r2"))
+Map.addLayer(SWCfromSVM, {min:0,max:1,palette:["BLUE","GREEN","RED"]}, "Support Vector Regression SWC")
+
+
+// K-Fold for RF
+var kfoldResult = doKFold(trainSamples, rf, 5)
+var SWCfromRF = kfoldResult.mean()
+print("valSWCfromRF kFold R²",kfoldResult.aggregate_mean("validation_r2"))
+Map.addLayer(SWCfromRF, {min:0,max:1,palette:["BLUE","GREEN","RED"]}, "Support Vector Regression SWC")
